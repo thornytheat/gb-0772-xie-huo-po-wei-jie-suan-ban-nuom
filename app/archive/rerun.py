@@ -1,6 +1,7 @@
 from datetime import UTC,datetime
 from time import perf_counter
 
+from app.archive.adjust import adjustments
 from app.archive.canonical import digest
 from app.clearing import Clearing
 from app.setup import POLICY
@@ -17,6 +18,7 @@ def run(docket, payload):
         return existing,True
     clearing=Clearing(original,docket.secret)
     report=clearing.report()
+    report['adjustments']=adjustments(docket,hashes,key,report['pricing']['stays'])
     manifest={'key':key,'source':source,'rule':POLICY,'inputs':hashes,'evidence_sha256':digest(report),
               'survey':vars(clearing.survey),'created_utc':datetime.now(UTC).isoformat(timespec='seconds'),
               'elapsed_ms':round((perf_counter()-started)*1000)}

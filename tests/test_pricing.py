@@ -36,3 +36,30 @@ def test_stay_segment_split_conserves_minutes_and_cost(dirty):
     for line in dirty.pricing['stays']:
         assert line['minutes']==sum(x['minutes'] for x in line['segments'])
         assert line['due_cents']==sum(x['rate_cents']*x['minutes'] for x in line['segments'])
+
+
+def test_reservation_shares_one_allowance_across_stops(relay):
+    from app.clearing import Clearing
+    clearing=Clearing(relay,b'fixture-2026')
+    short,unload=clearing.pricing['stays']
+    assert (short['free_minutes'],short['due_cents'])==(4,0)
+    assert (unload['free_minutes'],unload['due_cents'])==(6,460)
+    assert [s['allowance'] for s in clearing.pricing['stays']]==['BK-31','BK-31']
+
+
+def test_allowance_spans_midnight_without_reset(relay):
+    from app.clearing import Clearing
+    clearing=Clearing(relay,b'fixture-2026')
+    short,unload=clearing.pricing['stays']
+    assert [(s['day'],s['code'],s['minutes']) for s in short['segments']]==[('2026-11-30','FREE',4)]
+    assert [(s['day'],s['code'],s['minutes']) for s in unload['segments']]==[
+        ('2026-12-01','FREE',6),('2026-12-01','BASE',15),('2026-12-01','UPGRADE',4)]
+    assert short['free_minutes']+unload['free_minutes']==10
+
+
+def test_pricing_and_berth_balance_agree_on_shared_allowance(relay):
+    from app.clearing import Clearing
+    clearing=Clearing(relay,b'fixture-2026')
+    result=clearing.settlement
+    assert result['totals']['free']==sum(s['free_minutes'] for s in clearing.pricing['stays'])==10
+    assert all(b['scheduled']==b['vacant']+b['disputed']+b['free']+b['base']+b['upgrade'] for b in result['berths'])

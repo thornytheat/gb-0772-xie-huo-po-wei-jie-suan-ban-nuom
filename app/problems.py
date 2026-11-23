@@ -13,4 +13,7 @@ LABEL = {
     'BOOKED':'预约已关联','WALK_IN':'无生效预约','GAP':'实收差价','MATCH':'实收一致',
     'NO_PAYMENT':'无实收回执','ORPHAN':'游离实收','ATTACH_CONFLICT':'预约版本冲突',
     'AMOUNT':'金额无效','UNKNOWN_SENSOR':'杆侧来源缺失','NONE':'无占位',
+    'NEW_STOP':'新停靠出账','UNCHANGED':'与上一批次一致','MERGED':'迟到杆侧记录并入，首免不重复发放',
+    'EXTENDED':'迟到记录延长停靠','SPAN_CHANGED':'停靠区间变化','SPLIT':'原停靠拆段，差额随首段结算',
+    'REPRICED':'预约内首免额度重分配','VOIDED':'记录移除，原账冲回',
 }

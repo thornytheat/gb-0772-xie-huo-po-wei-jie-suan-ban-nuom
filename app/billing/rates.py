@@ -6,15 +6,15 @@ from app.setup import BASE_CENTS, FREE_MINUTES, TIER_LIMIT, UPGRADE_CENTS
 
 def price(stops,disputes):
     by_car_day=Counter()
-    free_by_stay=Counter()
+    free_by_reservation=Counter()
     by_stay={r['stay']:[] for r in stops}
     ordered=sorted((when,s['berth'],s['stay'],s) for s in stops for when in span(s['start'],s['end']))
     for when,berth,key,s in ordered:
         day=when.astimezone(LOCAL).date().isoformat()
         if (berth,when) in disputes:
             code,cents=disputes[berth,when],0
-        elif s['booking'] and when<s['booking']['end'] and free_by_stay[key]<FREE_MINUTES:
-            free_by_stay[key]+=1
+        elif s['booking'] and when<s['booking']['end'] and free_by_reservation[s['booking']['reservation']]<FREE_MINUTES:
+            free_by_reservation[s['booking']['reservation']]+=1
             code,cents='FREE',0
         else:
             counter=(s['vehicle'],day)
@@ -30,5 +30,7 @@ def price(stops,disputes):
                                'code':code,'minutes':0,'rate_cents':cents,'cents':0})
             segment=slices[-1]
             segment.update(end=(when+M).isoformat(),minutes=segment['minutes']+1,cents=segment['cents']+cents)
-        output.append(s | {'segments':slices,'due_cents':sum(segment['cents'] for segment in slices)})
+        output.append(s | {'segments':slices,'due_cents':sum(segment['cents'] for segment in slices),
+                           'free_minutes':sum(segment['minutes'] for segment in slices if segment['code']=='FREE'),
+                           'allowance':s['booking']['reservation'] if s['booking'] else None})
     return output

@@ -22,7 +22,8 @@ def preview(request:Request,sample:str,stage:str):
 def archive(request:Request,payload:dict):
     record,reused=run(request.app.state.docket,payload)
     return {'key':record['manifest']['key'],'reused':reused,'manifest':record['manifest'],
-            'totals':record['evidence']['settlement']['totals'],'money':record['evidence']['settlement']['money']}
+            'totals':record['evidence']['settlement']['totals'],'money':record['evidence']['settlement']['money'],
+            'adjustment_cents':record['evidence'].get('adjustments',{}).get('total_cents',0)}
 
 
 @api.get('/dockets')
